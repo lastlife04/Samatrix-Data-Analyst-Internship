@@ -2,6 +2,24 @@
 
 Welcome to the ultimate technical guide for **ScanSense AI**. This document is designed to be a complete front-to-back textbook. 
 
+## 🌟 What is ScanSense AI?
+**ScanSense AI** is a highly specialized, multimodal medical assistant designed for both patients and healthcare professionals. Unlike generic AI chatbots, ScanSense is tightly restricted to the medical domain and will automatically reject unrelated questions (e.g., coding, cooking, or general trivia).
+
+### 🎯 Core Characteristics
+- **Multimodal Capabilities:** It doesn't just read text! You can upload full medical PDF reports or even diagnostic images (like X-Rays, MRIs, and CT Scans), and the AI will analyze them visually.
+- **Strict Medical Guardrails:** A two-step validation process securely checks every uploaded file to ensure it is actually medical data before passing it to the main AI.
+- **Persistent Local Memory:** Completely private local storage. Every chat session is saved offline in an SQLite database (`chat.db`), allowing you to rename, retrieve, or delete your chat histories at any time.
+- **Modular & Scalable:** The codebase is heavily modularized into clean folders (`components`, `utils`, `config`) so that adding new features in the future is incredibly easy for any developer.
+
+### 🛠️ How is it Built?
+The project sits on a cutting-edge, yet incredibly beginner-friendly tech stack:
+- **Frontend Framework:** **Streamlit** (Python). It allows us to build beautiful, responsive web apps using pure Python without writing raw HTML or React.
+- **AI Brain:** **Llama 4 Scout (17b-16e-instruct)** via the ultra-fast **Groq** API.
+- **Database:** **SQLite**. A lightweight, file-based database that requires no server setups.
+- **File Processing:** **PyPDF2** for extracting text from documents, and **Pillow (PIL)** for converting images into Base64 format for the AI's "vision".
+
+---
+
 First, we will look at the big picture (the Folder Structure). 
 Then, we will dive into **every single Python file, line by line**, pasting the exact code block and immediately explaining what it does in plain, beginner-friendly English!
 
