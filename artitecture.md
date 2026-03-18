@@ -417,3 +417,86 @@ if __name__ == "__main__":
 - The app fundamentally just calls `init_db()` (builds tables), `initialize_session_state()` (wipes the whiteboard), and then draws the two big puzzle pieces `render_sidebar()` and `render_chat_interface()`.
 
 You have now mastered the **ScanSense AI** backend flow! No matter what features you build in the future, you have the absolute blueprint inside this document.
+
+---
+
+## 🛠️ 3. Advanced Python & Streamlit Concepts Explained
+
+If you're a beginner, some of the Python code in this app might look like magic. Let's break down the hidden mechanics that make ScanSense AI function so smoothly.
+
+### What exactly is `st.session_state`?
+In standard Python scripts, variables lose their data the moment the script finishes running. Streamlit is unique: every time you click a button or type a letter, Streamlit reruns the *entire* `app.py` file from top to bottom.
+If we didn't have `st.session_state`, your chat history would instantly wipe itself blank every time you pressed Enter! 
+`st.session_state` is a specialized Python Dictionary (a key-value store) that survives these reruns. We use it aggressively to store:
+- `st.session_state.chat_history`: The live array of your messages.
+- `st.session_state.current_session_id`: The database tracker.
+- `st.session_state.content_processed`: The cached image strings so we don't have to decode your uploaded image on every single rerun.
+
+### How does Base64 Encoding Work?
+You probably noticed this code in `file_handlers.py`:
+`base64.b64encode(buffered.getvalue()).decode('utf-8')`
+When you upload an X-ray (a `.jpg`), that file is purely visual. AI models running on servers (like Llama 4) don't have "eyes." They communicate over JSON (text files).
+Base64 is a mathematical trick that takes every pixel of your image (binary 1s and 0s) and translates it into standard English alphabet letters and numbers (A-Z, 0-9). The resulting string is enormous (sometimes 100,000+ characters), but it allows us to safely embed the picture right into a text-based internet request.
+
+### Streamlit `st.rerun()` Explained
+In `sidebar.py`, we heavily use `st.rerun()`. 
+Why? When you click a tiny Delete button (`🗑️ Delete`), our code tells SQLite to erase the entry from the hard drive. However, Streamlit already painted that chat button onto your screen a millisecond earlier! 
+Without `st.rerun()`, you would click Delete, the database would erase it, *but the button would still remain on your screen* until you refreshed the page. Calling `st.rerun()` forces Streamlit to immediately erase the screen and redraw the HTML from scratch, instantly reflecting the deleted chat.
+
+---
+
+## 🛡️ 4. Prompt Engineering & AI Security
+
+### Why is Validation Necessary?
+The internet is full of "jailbreak" attempts, where users try to trick AI assistants into ignoring their original instructions. We wrote the `is_medical_content()` function to explicitly act as an impenetrable firewall.
+By running a *hidden* background API call with `temperature=0`, we force another AI to rigorously scrutinize the uploaded file in isolation. The user has zero ability to speak to this AI. This guarantees no prompt injection can bypass the medical filter.
+
+### Breaking Down the `SYSTEM_PROMPT`
+In `config/settings.py`, we have:
+> "You must STRICTLY REFUSE to answer any questions that are not related to the medical or health field."
+
+This is known as **Zero-Shot Prompting with Negative Constraints**. LLMs naturally want to be helpful and will talk about anything. By capitalizing `STRICTLY REFUSE`, we are adjusting the statistical probability weights on the Groq servers, mathematically punishing the AI if generating vocabulary related to coding, recipes, or casual chat.
+
+---
+
+## 🚀 5. Scaling Up (The Future Developer Roadmap)
+
+As your skills grow, you might want to turn ScanSense AI from a personal desktop app into a massive global website used by thousands of doctors. If you ever reach that point, here is a professional roadmap on exactly what you need to upgrade:
+
+### Upgrade #1: Adding User Login (Authentication)
+Right now, `chat.db` saves every chat into one giant pool. Anyone who opens your laptop can see them.
+**How to fix it:**
+You would integrate an authentication library (like `streamlit-authenticator` or Firebase). You would modify the SQLite `sessions` table to add a new column: `user_id`. When querying past chats, instead of `SELECT * FROM sessions`, you would write `SELECT * FROM sessions WHERE user_id = ?` to ensure users only see their own data.
+
+### Upgrade #2: Swapping SQLite for PostgreSQL
+SQLite is fantastic because it's just a file (`chat.db`). However, if 50 users try to upload X-rays at the exact same millisecond, SQLite will lock the file and crash.
+**How to fix it:**
+You would launch a real cloud database (like PostgreSQL on Supabase or AWS). You would change `import sqlite3` inside `database/db_manager.py` to `import psycopg2` or use an Object Relational Mapper (ORM) like SQLAlchemy. Because we beautifully modularized our database logic into its own folder, you would not have to change a single line of code in the UI components!
+
+### Upgrade #3: AI Model Hot-Swapping
+Currently, we are hardcoded to `meta-llama/llama-4-scout-17b-16e-instruct`. Groq constantly releases new, faster models.
+**How to fix it:**
+You could add an `st.selectbox()` in the sidebar allowing the user to choose their own AI brain! You would map the dropdown options to model names, save the chosen string into `st.session_state`, and pass that dynamic variable to the `client.chat.completions.create(model=...)` call.
+
+---
+
+## 🐞 6. Troubleshooting & Common Bugs (FAQ)
+
+Every developer runs into issues. If you pull this code onto a brand new computer and things break, check this list:
+
+### Error: "GROQ_API_KEY not found"
+**Cause:** Python cannot find your secret key in memory.
+**Fix:** You forgot to create the `.env` file, or you named it `.env.txt`. Make sure the file has no extension and is sitting in the root `multimodal-analyzer` folder.
+
+### Error: "Database disk image is malformed"
+**Cause:** Your computer suddenly shut down while writing a message, corrupting the `chat.db` file.
+**Fix:** Delete the `chat.db` file completely. The next time you run `app.py`, the `init_db()` function will instantly generate a fresh, clean database automatically!
+
+### Error: "ModuleNotFoundError: No module named 'streamlit'"
+**Cause:** You are trying to run the app, but Python doesn't have the required packages installed.
+**Fix:** You need to run `pip install -r requirements.txt` again. If you are using a virtual environment (`.venv`), make sure it is actively activated in your terminal (you should see a `(.venv)` graphic floating next to your typing cursor).
+
+---
+
+### 🎉 Conclusion
+This marks the absolute end of the ScanSense AI Architecture Document. You have learned UI state management, database engineering, API prompt security, binary encoding, and layout structuring. Happy coding!
