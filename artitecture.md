@@ -259,46 +259,69 @@ def render_sidebar():
 
 ```python
     with st.sidebar:
-        st.title("History")
-        st.button("New Chat", on_click=reset_chat, use_container_width=True)
-        st.divider()
+        # Branding Header
+        import os
+        import base64
+        
+        sidebar_brand_html = '''
+            <div class="sidebar-brand">
+                <div class="logo-glow">SS</div>
+                <div class="brand-text">ScanSense AI</div>
+            </div>
+        '''
+        
+        logo_path = "assets/logo.png"
+        if os.path.exists(logo_path):
+            try:
+                with open(logo_path, "rb") as f:
+                    b64_logo = base64.b64encode(f.read()).decode()
+                sidebar_brand_html = f'''
+                    <div class="sidebar-brand-custom">
+                        <img src="data:image/png;base64,{b64_logo}" class="custom-sidebar-logo" />
+                    </div>
+                '''
+            except Exception:
+                pass
+
+        st.markdown(sidebar_brand_html, unsafe_allow_html=True)
+        
+        if st.button("＋ New Chat", on_click=reset_chat, use_container_width=True, type="primary"):
+            pass
+
         sessions = get_all_sessions()
 ```
 **Explanation:** 
 - `with st.sidebar:` is Streamlit's way of saying "draw everything underneath this line on the left-hand panel".
-- `st.button` draws a button that fills the entire width `use_container_width=True`. When clicked, it automatically runs our `reset_chat` wipe function!
+- It dynamically checks if `logo.png` exists. If so, it replaces the native text duplicate directly with the actual responsive, glowing logo graphic!
+- `st.button` draws a primary button. When clicked, it automatically runs our `reset_chat` wipe function!
 - `sessions = get_all_sessions()` asks standard SQlite to hand us all past chats saved locally.
 
 ```python
         for session in sessions:
-            col1, col2 = st.columns([0.85, 0.15])
-            with col1:
-                if st.button(session["title"], key=f"session_{session['id']}"):
-                    st.session_state.current_session_id = session["id"]
-                    st.session_state.chat_history = get_chat_history(session["id"])
-                    st.rerun()
+            if st.session_state.editing_session_id == session['id']:
+                col_input, col_save = st.columns([0.7, 0.3])
+                with col_input:
+                    new_title = st.text_input("Rename", value=session["title"], key=f"ren_input_{session['id']}", label_visibility="collapsed")
+                with col_save:
+                    if st.button("Save", key=f"save_{session['id']}", type="primary", use_container_width=True):
+                        update_session_title(session["id"], new_title)
+                        st.session_state.editing_session_id = None
+                        st.rerun()
+            else:
+                col1, col2, col3 = st.columns([0.80, 0.10, 0.10])
+                with col1:
+                    btn_text = f"💭 {session['title']}"
+                    if st.button(btn_text, key=f"session_{session['id']}", use_container_width=True, type="secondary"):
+                        st.session_state.current_session_id = session["id"]
+                        st.session_state.chat_history = get_chat_history(session["id"])
+                        st.rerun()
 ```
 **Explanation:** 
 - A `for` loop cycles through every saved chat.
-- We artificially split the sidebar space into two columns: `85%` for the big title button, `15%` for the three-dots menu.
-- If you click the title button (`col1`), it immediately updates the `session_state` whiteboard with that old ID, downloads its history from the DB using `get_chat_history`, and calls `st.rerun()`.
+- We check if this specific chat `id` is currently being edited. If it is, we render standard `st.text_input` and `st.button("Save")` right inline!
+- If it's not being edited, we render the title button, a pencil icon `✏️` button, and a trash `🗑️` button!
+- If you click the title button, it immediately updates the `session_state` whiteboard with that old ID, downloads its history from the DB using `get_chat_history`, and calls `st.rerun()`.
 - `st.rerun()` literally restarts the python script block instantly from the top so the page updates with your past chat!
-
-```python
-            with col2:
-                with st.popover("⋮"):
-                    new_title = st.text_input("Rename", value=session["title"], key=f"rename_{session['id']}")
-                    if st.button("Save", key=f"save_{session['id']}"):
-                        update_session_title(session["id"], new_title)
-                        st.rerun()
-                    if st.button("🗑️ Delete", key=f"delete_{session['id']}"):
-                        delete_session(session["id"])
-                        st.rerun()
-```
-**Explanation:** 
-- In the tiny `15%` column (`col2`), we build `st.popover("⋮")`. A popover is a hidden menu that reveals elements only when clicked.
-- Inside the popover, we add a text box (`st.text_input`) and two buttons (`Save` and `Delete`). All these elements are carefully assigned a unique `key` combined with the `session['id']` so Streamlit never mixes up which chat you are interacting with.
-- If deleted, it runs our SQL deletion handler, and forces an immediate page `st.rerun()` to make the chat physically vanish from the menu.
 
 ---
 
@@ -398,7 +421,6 @@ def main():
     st.markdown('''
         <style>
         [data-testid="stHeader"]::after { content: "ScanSense AI 🧿"; ... }
-        div[data-testid="stPopover"] button p + * { display: none !important; }
         </style>
         ''', unsafe_allow_html=True)
     
