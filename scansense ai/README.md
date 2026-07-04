@@ -1,6 +1,6 @@
 <div align="center">
 
-  <img src="./images/logo_title.png" alt="ScanSense AI" width="380" />
+  <img src="./images/logo_title.png" alt="ScanSense AI" width="300" />
 
   <p>
     <b>An autonomous, guardrail-first medical assistant powered by LangGraph, FastAPI, and Llama 4 via Groq. Intelligently validates, correlates, and analyzes medical reports and diagnostic images in real time.</b>
