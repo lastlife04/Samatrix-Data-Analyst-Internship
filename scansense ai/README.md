@@ -10,6 +10,8 @@
     <a href="https://scansense-ai-nppn.onrender.com" target="_blank">
       <img src="https://img.shields.io/badge/Live_Demo-scansense--ai--nppn.onrender.com-00C5A2?style=for-the-badge&logo=render&logoColor=white" alt="Live Demo" />
     </a>
+    <br />
+    <sub>👉 Click the badge above or <a href="https://scansense-ai-nppn.onrender.com" target="_blank"><b>click here</b></a> to visit the live application.</sub>
   </p>
 
   <p>
