@@ -7,6 +7,12 @@
   </p>
 
   <p>
+    <a href="https://scansense-ai-nppn.onrender.com" target="_blank">
+      <img src="https://img.shields.io/badge/Live_Demo-scansense--ai--nppn.onrender.com-00C5A2?style=for-the-badge&logo=render&logoColor=white" alt="Live Demo" />
+    </a>
+  </p>
+
+  <p>
     <img src="https://img.shields.io/badge/Python-3.11-blue?logo=python&logoColor=white" />
     <img src="https://img.shields.io/badge/FastAPI-0.111-009688?logo=fastapi&logoColor=white" />
     <img src="https://img.shields.io/badge/Vanilla_JS-Build--Free-yellow?logo=javascript&logoColor=black" />
